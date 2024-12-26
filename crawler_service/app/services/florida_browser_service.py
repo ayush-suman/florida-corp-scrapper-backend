@@ -67,7 +67,7 @@ class FloridaBrowserService(metaclass=Singleton):
     async def ensure_ready(self):
         if not self.is_ready:
             ctx_manager: Playwright = await async_playwright().start()
-            browser = await ctx_manager.chromium.launch(headless=False)
+            browser = await ctx_manager.chromium.launch(headless=True)
             self.__page_pool = _PagePool(self.__page_pool_size, page_factory=browser.new_page, on_close=browser.close)
             self.is_ready = True
 

@@ -27,9 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/api/v1/crawler")
 async def index():
-    return {"message": "API Service is running"}
+    return {"message": "Crawler Service is running"}
 
 app.include_router(crawler, prefix="/api/v1/crawler", tags=["crawler"])
 
