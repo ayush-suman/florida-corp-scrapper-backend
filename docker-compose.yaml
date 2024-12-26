@@ -1,0 +1,44 @@
+# Kindly ignore this, as this is not set up yet.
+services: 
+  crawler_service: 
+    build: ./crawler_service
+    volumes:
+      - ./crawler-service/:/app/
+    ports:
+      - 8001:8765
+    environment:
+      - DATABASE_URI=postgresql://ayushsuman:password@db_service/florida_corp
+      - HOST=0.0.0.0
+      - PORT=8765
+
+  search_service: 
+    build: ./search_service
+    volumes:
+      - ./search_service/:/app/
+    ports:
+      - 8002:8765
+    environment:
+      - DATABASE_URI=postgresql://ayushsuman:password@db_service/florida_corp
+      - HOST=0.0.0.0
+      - PORT=8765
+
+  db_service:
+    image: postgres:latest
+    volumes:
+      - ./db_service:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: ayushsuman
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: florida_corp
+    ports:
+      - "5432:5432"
+
+  nginx:
+      image: nginx:latest
+      ports:
+        - "8080:8080"
+      volumes:
+        - ./nginx_config.conf:/etc/nginx/conf.d/default.conf
+      depends_on:
+        - crawler_service
+        - search_service
