@@ -37,8 +37,8 @@ async def ws(websocket: WebSocket):
                 asyncio.create_task(send_entities())
     except WebSocketDisconnect as wsd:
         print("Client disconnected: ", host)
-        await entity_dao.remove_notifier(current_search_term)
     except Exception as e:
         print("An error occurred", e)
     finally:
+        await entity_dao.remove_notifier(current_search_term)
         await websocket.close()

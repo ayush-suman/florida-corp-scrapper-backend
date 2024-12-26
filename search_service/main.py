@@ -27,11 +27,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/api/v1/search")
 async def index():
-    return {"message": "API Service is running"}
+    return {"message": "Search Service is running"}
 
-app.include_router(search, prefix="/api/v1/search", tags=["crawler"])
+app.include_router(search, prefix="/api/v1/search", tags=["search"])
 
 async def main():    
     uvicorn.run(

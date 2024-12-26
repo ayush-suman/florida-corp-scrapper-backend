@@ -51,17 +51,17 @@ ORDER BY created_at DESC;
         term = '_'.join(search_term.lower().split(' '))
         create_notifier_function = f"""
 CREATE OR REPLACE FUNCTION notify_{term}_search() 
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
-    PERFORM pg_notify(entity_{term}_changes, new_to_json(NEW)::text);
-    RETURN NULL;
+    PERFORM pg_notify('entity_{term}_changes', row_to_json(NEW)::text);
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;"""
+$$"""
         
         create_trigger = f"""
 CREATE OR REPLACE TRIGGER {term}_search_notifier
 AFTER INSERT ON entity_details FOR EACH ROW
-WHEN (NEW.entity_name ILIKE '{search_term}')
+WHEN (NEW.entity_name ILIKE '%{search_term}%')
 EXECUTE FUNCTION notify_{term}_search();"""
         
         async with self.__conn.cursor() as cur:
@@ -88,11 +88,13 @@ EXECUTE FUNCTION notify_{term}_search();"""
             await cur.execute(f"LISTEN entity_{term}_changes;")
         await self.__conn.commit()
         print("Created listener for: ", search_term)
-        async for msg in self.__conn.notifies(timeout=10):
+        generator = self.__conn.notifies()
+        async for msg in generator:
+            print("Received message: ", msg)
             if search_term in self.__registered_search_terms:
                 yield EntityDetail(**json.loads(msg.payload))
             else:
-                break
+                await generator.aclose()
         async with self.__conn.cursor() as cur:
             await cur.execute(f"UNLISTEN entity_{term}_changes;")
         await self.__conn.commit()
